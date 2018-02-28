@@ -1,6 +1,18 @@
 
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
+cmake_policy(SET CMP0023 OLD)
 project(cmake_and_cuda LANGUAGES CXX CUDA)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -std=c++1y")
+
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTORCC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+find_package(Qt5Widgets REQUIRED)
+
+include_directories(${Qt5Widgets_INCLUDES})
 
 include(CTest)
 
@@ -21,12 +33,20 @@ set_target_properties( particles
                        PROPERTIES CUDA_SEPARABLE_COMPILATION ON
                       )
 
+
+
+
 if(BUILD_TESTING)
+
 
   add_executable(particle_test   main.cpp)
 
-  set_target_properties(particle_test PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+  qt5_use_modules(particle_test Widgets Core)
+
+  #set_target_properties(particle_test PROPERTIES CUDA_SEPARABLE_COMPILATION ON)
+
   target_link_libraries(particle_test PRIVATE particles)
+  set(CUDA_LIBRARIES PUBLIC ${CUDA_LIBRARIES})
 
   #add_test(NAME particles_10k COMMAND particle_test 10000 )
   #add_test(NAME particles_256k COMMAND particle_test 256000 )
