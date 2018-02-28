@@ -3,13 +3,11 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <stdio.h>
-#include <cuda_runtime_api.h>
-#include <cuda.h>
-#include "miningdialog.h"
-#include "guiutil.h"
-#include "ui_miningdialog.h"
 
-#include "transactiontablemodel.h"
+#include "miningdialog.h"
+//#include "guiutil.h"
+#include "ui_miningdialog.h"
+#include "customlistmodel.h"
 
 #include <QModelIndex>
 #include <QSettings>
@@ -19,6 +17,7 @@
 #include <QMainWindow>
 #include <QFontDatabase>
 #include <QTextBlockFormat>
+#include <QMessageBox>
 
 
 
@@ -49,8 +48,10 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     ui->setupUi(this);
     ui->stopButton->setEnabled(false);
 
+    createListModelView();
+
     /* Open CSS when configured */
-    this->setStyleSheet(GUIUtil::loadStyleSheet());
+    //this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     ui->textBrowser->setStyleSheet("background-color: black;");
     // ui->textBrowser->setTextColor( QColor( "red" ) );
@@ -66,6 +67,18 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     //QString desc = "Tra la la";//idx.data(TransactionTableModel::LongDescriptionRole).toString();
     //ui->detailText->setHtml(desc);
 }
+
+void MiningDialog::createListModelView(){
+    //view = new QListView;
+    model = new CustomListModel;
+    ui->gpuListView->setModel(model);
+
+    QStringList strList;
+    strList << "monitor" << "mouse" << "keyboard" << "hard disk drive"
+            << "graphic card" << "sound card" << "memory" << "motherboard";
+    model->setStringList(strList);
+}
+
 
 void MiningDialog::run_benchmark()
 {
@@ -109,7 +122,7 @@ void MiningDialog::run_benchmark()
     cudaDeviceReset();*/
 
 
-    int nDevices;
+    /*int nDevices;
 
     cudaGetDeviceCount(&nDevices);
     for (int i = 0; i < nDevices; i++) {
@@ -123,7 +136,7 @@ void MiningDialog::run_benchmark()
                prop.memoryBusWidth);
         printf("  Peak Memory Bandwidth (GB/s): %f\n\n",
                2.0 * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1.0e6);
-    }
+    }*/
 
 
     if(minerLogProcess) {
@@ -187,10 +200,11 @@ void MiningDialog::stop_mining()
 void MiningDialog::ReadOut()
 {
     QProcess *p = dynamic_cast<QProcess *>( sender() );
-    printf("LALALALALALALALALA\n");
+    printf("LALALALALALALALALA - read out\n");
     if (p) {
         //ui->textBrowser->append(p->readAllStandardOutput());
         setTextTermFormatting(ui->textBrowser, p->readAllStandardOutput());
+
     }
 }
 
@@ -201,9 +215,9 @@ void MiningDialog::ReadErr()
     if (p) {
         ui->textBrowser->append("ERROR: ");
         //ui->textBrowser->append(p->readAllStandardError());
-        setTextTermFormatting(ui->textBrowser, p->readAllStandardError());
+       // setTextTermFormatting(ui->textBrowser, p->readAllStandardError());
     }
-    printf("LALALALALALALALALA54354353\n");
+    printf("LALALALALALALALALA5435435 %s \n", p->readAllStandardError().data());
 }
 
 

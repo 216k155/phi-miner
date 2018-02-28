@@ -11,7 +11,7 @@
 #include <QString>
 #include <QListIterator>
 #include <QTextCharFormat>
-
+#include "customlistmodel.h"
 
 namespace Ui
 {
@@ -40,6 +40,8 @@ private:
     int m_HistoryIndex;
     QStringList m_History;
     QProcess *minerLogProcess = NULL;
+    CustomListModel* model;
+    void createListModelView();
 private Q_SLOTS:
     void run_benchmark();
     void run_mining();

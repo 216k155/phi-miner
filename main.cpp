@@ -2,8 +2,9 @@
 // Created by 216k155
 //
 #include "device_info.h"
-#include <qapplication.h>
-#include <qpushbutton.h>
+#include <QApplication>
+#include <QPushButton>
+#include "miningdialog.h"
 
 
 int main( int argc, char **argv )
@@ -11,10 +12,11 @@ int main( int argc, char **argv )
     printDeviceProps();
     QApplication a( argc, argv );
 
-    QPushButton hello( "Hello world!", 0 );
-    hello.resize( 100, 30 );
+    MiningDialog miningDialog;
 
-   // a.setMainWidget( &hello );
-    hello.show();
+
+    miningDialog.show();
+
+
     return a.exec();
 }
