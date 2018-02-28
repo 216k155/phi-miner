@@ -23,6 +23,7 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value,
                  int role);
     void save();
+    void getCheckedRows();
 private:
     QSet<QPersistentModelIndex> checkedItems;
 };
