@@ -54,7 +54,7 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     //this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     ui->textBrowser->setStyleSheet("background-color: black;");
-    // ui->textBrowser->setTextColor( QColor( "red" ) );
+    // ui->textBr owser->setTextColor( QColor( "red" ) );
 
     ui->poolComboBox->addItem(tr("bpool.io:3033"));    
     //ui->poolComboBox->addItem(tr("yiimp.eu:8333"));
@@ -67,7 +67,7 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     ui->poolComboBox->addItem(tr("phi.minemoney.co:8333"));
     ui->poolComboBox->addItem(tr("s.antminepool.com:6667")); 
     ui->poolComboBox->addItem(tr("eu1.altminer.net:6667"));                                              
-ui->poolComboBox->setCurrentIndex(0);
+    ui->poolComboBox->setCurrentIndex(0);
 
     connect(ui->benchmarkButton, SIGNAL(clicked()), this, SLOT(run_benchmark()));
     connect(ui->startButton, SIGNAL(clicked()), this, SLOT(run_mining()));
@@ -86,12 +86,14 @@ void MiningDialog::createListModelView(){
     strList << "monitor" << "mouse" << "keyboard" << "hard disk drive"
             << "graphic card" << "sound card" << "memory" << "motherboard";
     model->setStringList(strList);
+    model->getCheckedRows();
 }
-
 
 void MiningDialog::run_benchmark()
 {
 
+    model->getCheckedRows();
+    //CustomListModel model = (CustomListModel)ui->gpuListView->model();
     /*const int ARRAY_SIZE = 96;
     const int ARRAY_BYTES = ARRAY_SIZE * sizeof(float);
 
@@ -147,7 +149,6 @@ void MiningDialog::run_benchmark()
                2.0 * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1.0e6);
     }*/
 
-
     if(minerLogProcess) {
         minerLogProcess->deleteLater();
         minerLogProcess = NULL;
@@ -178,7 +179,6 @@ void MiningDialog::run_benchmark()
     //printf("%s \n", output.data());
 }
 
-
 void MiningDialog::run_mining()
 {
     ui->startButton->setEnabled(false);
@@ -191,7 +191,6 @@ void MiningDialog::run_mining()
     connect(minerLogProcess, SIGNAL(readyReadStandardError()),
             this, SLOT(ReadErr()));
     minerLogProcess->start("src/qt/start.sh");
-
 }
 
 void MiningDialog::stop_mining()
@@ -213,7 +212,6 @@ void MiningDialog::ReadOut()
     if (p) {
         //ui->textBrowser->append(p->readAllStandardOutput());
         setTextTermFormatting(ui->textBrowser, p->readAllStandardOutput());
-
     }
 }
 
@@ -228,7 +226,6 @@ void MiningDialog::ReadErr()
     }
     printf("LALALALALALALALALA5435435 %s \n", p->readAllStandardError().data());
 }
-
 
 MiningDialog::~MiningDialog()
 {
@@ -706,7 +703,6 @@ void MiningDialog::parseEscapeSequence(int attribute, QListIterator< QString > &
 
 void MiningDialog::setTextTermFormatting(QTextBrowser * textEdit, QString const & text)
 {
-
     QTextDocument * document = textEdit->document();
     QRegExp const escapeSequenceExpression(R"(\x1B\[([\d;]+)m)");
     QTextCursor cursor(document);
@@ -741,6 +737,3 @@ void MiningDialog::setTextTermFormatting(QTextBrowser * textEdit, QString const 
     cursor.movePosition(QTextCursor::End);
     textEdit->setTextCursor(cursor);
 }
-
-
-
