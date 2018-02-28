@@ -6,6 +6,7 @@
 #include <QColor>
 #include <QTextStream>
 #include <QFile>
+#include <iostream>
 
 CustomListModel::CustomListModel(QObject *parent):
         QStringListModel(parent){
@@ -64,4 +65,9 @@ void CustomListModel::save(){
     out << "Required components:" << "\n";
     foreach(QPersistentModelIndex index, checkedItems)
     out << index.data().toString() << "\n";
+}
+
+void CustomListModel::getCheckedRows(){
+    foreach(QPersistentModelIndex index, checkedItems)
+    std::cout << "- " << index.row() << "\n";
 }
