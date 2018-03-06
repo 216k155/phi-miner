@@ -1,5 +1,5 @@
 //
-// Created by 216k155
+// Created by 216k155 on 2/26/18.
 //
 
 #ifndef CMAKE_AND_CUDA_MAINWINDOW_H

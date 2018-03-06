@@ -49,7 +49,7 @@
         <item>
          <layout class="QVBoxLayout" name="verticalLayout_2">
           <item>
-           <widget class="QListView" name="gpuListView"/>
+           <widget class="QTableView" name="gpuListView"/>
           </item>
           <item>
            <widget class="QLabel" name="outputLabel">
@@ -170,4 +170,3 @@
  <resources/>
  <connections/>
 </ui>
-

@@ -1,5 +1,5 @@
 //
-// Created by 216k155
+// Created by 216k155 on 2/26/18.
 //
 
 #include "customlistmodel.h"
@@ -8,6 +8,8 @@
 #include <QFile>
 #include <iostream>
 
+
+
 CustomListModel::CustomListModel(QObject *parent):
         QStringListModel(parent){
 }
@@ -15,6 +17,14 @@ CustomListModel::CustomListModel(QObject *parent):
 CustomListModel::CustomListModel(const QStringList &strings, QObject *parent):
         QStringListModel(strings, parent){
 
+}
+
+int CustomListModel::rowCount(const QModelIndex &parent) const {
+    if(parent.isValid() || (m_records->count() == 0)) {
+        return 0;
+    } else {
+        return m_records->count() - 1;
+    }
 }
 
 Qt::ItemFlags CustomListModel::flags (const QModelIndex & index) const {
@@ -42,7 +52,7 @@ QVariant CustomListModel::data(const QModelIndex &index,
 }
 
 bool CustomListModel::setData(const QModelIndex &index,
-                              const QVariant &value, int role){
+                              const QVariant &value, int role) {
 
     if(!index.isValid() || role != Qt::CheckStateRole)
         return false;
@@ -68,6 +78,28 @@ void CustomListModel::save(){
 }
 
 void CustomListModel::getCheckedRows(){
+
     foreach(QPersistentModelIndex index, checkedItems)
     std::cout << "- " << index.row() << "\n";
+}
+
+QVariant CustomListModel::headerData(int section, Qt::Orientation orientation, int role) const {
+    if(!m_records->count()) {
+        return QVariant();
+    }
+    if(orientation == Qt::Horizontal) {
+        if(role == Qt::DisplayRole) {
+            return "FFFF";
+        }
+    }
+    else if(orientation == Qt::Vertical) {
+        if(role == Qt::DisplayRole) {
+            return section+1;
+        }
+    }
+    return QAbstractTableModel::headerData(section, orientation, role);
+}
+
+bool CustomListModel::loadData(QList<QStringList>* newList) {
+    m_records = newList;
 }

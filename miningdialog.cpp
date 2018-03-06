@@ -18,6 +18,7 @@
 #include <QFontDatabase>
 #include <QTextBlockFormat>
 #include <QMessageBox>
+#include <QTableView>
 
 
 
@@ -54,19 +55,19 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     //this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     ui->textBrowser->setStyleSheet("background-color: black;");
-    // ui->textBr owser->setTextColor( QColor( "red" ) );
+    // ui->textBrowser->setTextColor( QColor( "red" ) );
 
-    ui->poolComboBox->addItem(tr("bpool.io:3033"));    
+    ui->poolComboBox->addItem(tr("bpool.io:3033"));
     //ui->poolComboBox->addItem(tr("yiimp.eu:8333"));
     ui->poolComboBox->addItem(tr("omegapool.cc:8003"));
     ui->poolComboBox->addItem(tr("pickaxe.pro:8333"));
-    ui->poolComboBox->addItem(tr("pool.ionik.fr:8333"));                                              
+    ui->poolComboBox->addItem(tr("pool.ionik.fr:8333"));
     ui->poolComboBox->addItem(tr("phi.mine.zpool.ca:8333"));
     ui->poolComboBox->addItem(tr("mine.zergpool.com:8333"));
     ui->poolComboBox->addItem(tr("eu1.unimining.net:8533"));
     ui->poolComboBox->addItem(tr("phi.minemoney.co:8333"));
-    ui->poolComboBox->addItem(tr("s.antminepool.com:6667")); 
-    ui->poolComboBox->addItem(tr("eu1.altminer.net:6667"));                                              
+    ui->poolComboBox->addItem(tr("s.antminepool.com:6667"));
+    ui->poolComboBox->addItem(tr("eu1.altminer.net:6667"));
     ui->poolComboBox->setCurrentIndex(0);
 
     connect(ui->benchmarkButton, SIGNAL(clicked()), this, SLOT(run_benchmark()));
@@ -79,15 +80,32 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
 
 void MiningDialog::createListModelView(){
     //view = new QListView;
-    model = new CustomListModel;
-    ui->gpuListView->setModel(model);
+    QStringList colNames;
+    colNames << "Video Cards" << "Compute Capability";
+    model = new CustomListModel();
 
+    QTableView* table = ui->gpuListView;
+    table->setModel(model);
+    //table->setHorizontalHeaderLabels(colNames);
+    model->setHeaderData( 1, Qt::Vertical, QObject::tr("Video Cards") );
     QStringList strList;
     strList << "monitor" << "mouse" << "keyboard" << "hard disk drive"
             << "graphic card" << "sound card" << "memory" << "motherboard";
-    model->setStringList(strList);
+    QList<QStringList>* list;
+    QStringList strList1;
+    strList1 << "monitor" << "2.0";
+    QStringList strList2;
+    strList2 << "keyboard" << "3.0";
+    list->push_back(strList1);
+    list->push_back(strList2);
+
+    model->loadData(list);
+    //model->setStringList(strList);
     model->getCheckedRows();
+
+
 }
+
 
 void MiningDialog::run_benchmark()
 {
@@ -149,6 +167,8 @@ void MiningDialog::run_benchmark()
                2.0 * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1.0e6);
     }*/
 
+
+
     if(minerLogProcess) {
         minerLogProcess->deleteLater();
         minerLogProcess = NULL;
@@ -179,6 +199,7 @@ void MiningDialog::run_benchmark()
     //printf("%s \n", output.data());
 }
 
+
 void MiningDialog::run_mining()
 {
     ui->startButton->setEnabled(false);
@@ -191,6 +212,7 @@ void MiningDialog::run_mining()
     connect(minerLogProcess, SIGNAL(readyReadStandardError()),
             this, SLOT(ReadErr()));
     minerLogProcess->start("src/qt/start.sh");
+
 }
 
 void MiningDialog::stop_mining()
@@ -212,6 +234,7 @@ void MiningDialog::ReadOut()
     if (p) {
         //ui->textBrowser->append(p->readAllStandardOutput());
         setTextTermFormatting(ui->textBrowser, p->readAllStandardOutput());
+
     }
 }
 
@@ -226,6 +249,7 @@ void MiningDialog::ReadErr()
     }
     printf("LALALALALALALALALA5435435 %s \n", p->readAllStandardError().data());
 }
+
 
 MiningDialog::~MiningDialog()
 {
@@ -703,6 +727,7 @@ void MiningDialog::parseEscapeSequence(int attribute, QListIterator< QString > &
 
 void MiningDialog::setTextTermFormatting(QTextBrowser * textEdit, QString const & text)
 {
+
     QTextDocument * document = textEdit->document();
     QRegExp const escapeSequenceExpression(R"(\x1B\[([\d;]+)m)");
     QTextCursor cursor(document);
@@ -737,3 +762,4 @@ void MiningDialog::setTextTermFormatting(QTextBrowser * textEdit, QString const 
     cursor.movePosition(QTextCursor::End);
     textEdit->setTextCursor(cursor);
 }
+
