@@ -26,6 +26,7 @@
  */
 #include "device_info.h"
 #include <stdio.h>
+#include<bits/stdc++.h>
 
 void printDeviceProps() {
   int nDevices;
@@ -34,7 +35,7 @@ void printDeviceProps() {
   for (int i = 0; i < nDevices; i++) {
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, i);
-    printf("Device Number: %d\n", i);
+    printf("Device Number BLA BLA: %d\n", i);
     printf("  Device name: %s\n", prop.name);
     printf("  Memory Clock Rate (KHz): %d\n",
            prop.memoryClockRate);
@@ -43,5 +44,37 @@ void printDeviceProps() {
     printf("  Peak Memory Bandwidth (GB/s): %f\n",
            2.0*prop.memoryClockRate*(prop.memoryBusWidth/8)/1.0e6);
       printf("  Major: %d Minor: %d\n",prop.major, prop.minor);
+
   }
+
+}
+
+int getDeviceCount() {
+    int nDevices;
+    cudaGetDeviceCount(&nDevices);
+    return nDevices;
+}
+
+std::vector <std::string> getPropsOfIDevice(int i) {
+    std::vector <std::string> props;
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, i);
+    std::string name = prop.name;
+    std::string version = std::to_string(prop.major) + "." + std::to_string(prop.minor);
+    props.push_back(name);
+    props.push_back(version);
+    return props;
+}
+
+std::vector<int> getMinableDevices() {
+    std::vector<int> devices;
+    int nDevices = getDeviceCount();
+    for(int i=0; i<nDevices; i++) {
+        cudaDeviceProp prop;
+        cudaGetDeviceProperties(&prop, i);
+        if(prop.major >= 5) {
+            devices.push_back(i);
+        }
+    }
+    return devices;
 }

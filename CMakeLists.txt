@@ -1,6 +1,7 @@
-
+set(CMAKE_CUDA_COMPILER "/usr/local/cuda-9.1/bin/nvcc")
 cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 cmake_policy(SET CMP0023 OLD)
+
 project(cmake_and_cuda LANGUAGES CXX CUDA)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${Qt5Widgets_EXECUTABLE_COMPILE_FLAGS} -std=c++1y")
@@ -9,6 +10,8 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+#set(AUTOUIC_SEARCH_PATHS ./forms)
+set(CMAKE_AUTOUIC_SEARCH_PATHS ${CMAKE_SOURCE_DIR}/forms)
 
 find_package(Qt5Widgets REQUIRED)
 
@@ -39,7 +42,7 @@ set_target_properties( particles
 if(BUILD_TESTING)
 
 
-  add_executable(particle_test   main.cpp)
+  add_executable(particle_test main.cpp miningdialog.cpp customlistmodel.cpp settingsdialog.cpp)
 
   qt5_use_modules(particle_test Widgets Core)
 

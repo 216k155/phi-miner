@@ -9,7 +9,7 @@
 
 int main( int argc, char **argv )
 {
-    printDeviceProps();
+    //printDeviceProps();
     QApplication a( argc, argv );
 
     MiningDialog miningDialog;

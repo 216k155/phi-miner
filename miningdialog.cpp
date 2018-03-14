@@ -7,6 +7,7 @@
 #include "miningdialog.h"
 //#include "guiutil.h"
 #include "ui_miningdialog.h"
+#include "device_info.h"
 #include "customlistmodel.h"
 
 #include <QModelIndex>
@@ -16,9 +17,11 @@
 #include <QCloseEvent>
 #include <QMainWindow>
 #include <QFontDatabase>
-#include <QTextBlockFormat>
+#include <QFile>
 #include <QMessageBox>
-#include <QTableView>
+#include <QTextStream>
+#include <QStandardPaths>
+#include <QDir>
 
 
 
@@ -55,18 +58,9 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     //this->setStyleSheet(GUIUtil::loadStyleSheet());
 
     ui->textBrowser->setStyleSheet("background-color: black;");
-    // ui->textBrowser->setTextColor( QColor( "red" ) );
+    // ui->textBr owser->setTextColor( QColor( "red" ) );
 
     ui->poolComboBox->addItem(tr("bpool.io:3033"));
-    //ui->poolComboBox->addItem(tr("yiimp.eu:8333"));
-    ui->poolComboBox->addItem(tr("omegapool.cc:8003"));
-    ui->poolComboBox->addItem(tr("pickaxe.pro:8333"));
-    ui->poolComboBox->addItem(tr("pool.ionik.fr:8333"));
-    ui->poolComboBox->addItem(tr("phi.mine.zpool.ca:8333"));
-    ui->poolComboBox->addItem(tr("mine.zergpool.com:8333"));
-    ui->poolComboBox->addItem(tr("eu1.unimining.net:8533"));
-    ui->poolComboBox->addItem(tr("phi.minemoney.co:8333"));
-    ui->poolComboBox->addItem(tr("s.antminepool.com:6667"));
     ui->poolComboBox->addItem(tr("eu1.altminer.net:6667"));
     ui->poolComboBox->setCurrentIndex(0);
 
@@ -74,34 +68,92 @@ MiningDialog::MiningDialog(QWidget* parent) : QMainWindow(parent),
     connect(ui->startButton, SIGNAL(clicked()), this, SLOT(run_mining()));
     connect(ui->stopButton, SIGNAL(clicked()), this, SLOT(stop_mining()));
 
+    connect(ui->settingsButton, SIGNAL(clicked()), this, SLOT(openSettingsDialog()));
+
+    connect(ui->exitButton, SIGNAL(clicked()), this, SLOT(exitButtonClicked()));
+
+    QString store_prefix = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
+    QDir dir(store_prefix);
+    if(!dir.exists())
+    {
+        dir.mkpath(store_prefix);
+    }
+
+    printf("DIRECTORY %s\n", store_prefix.toStdString().c_str());
+
     //QString desc = "Tra la la";//idx.data(TransactionTableModel::LongDescriptionRole).toString();
     //ui->detailText->setHtml(desc);
+}
+
+void MiningDialog::exitButtonClicked() {
+    this->close();
+}
+
+void MiningDialog::openSettingsDialog(){
+
+    settingsDialog = new SettingsDialog(this, &algo, &numThreads, &password);
+    settingsDialog->show();
 }
 
 void MiningDialog::createListModelView(){
     //view = new QListView;
     QStringList colNames;
     colNames << "Video Cards" << "Compute Capability";
-    model = new CustomListModel();
+
+    //printDeviceProps();
+
+    model = new CustomListModel(this);
 
     QTableView* table = ui->gpuListView;
-    table->setModel(model);
-    //table->setHorizontalHeaderLabels(colNames);
-    model->setHeaderData( 1, Qt::Vertical, QObject::tr("Video Cards") );
-    QStringList strList;
+    table->setSelectionBehavior(QAbstractItemView::SelectRows);
+//    table->horizontalHeader()->setStretchLastSection(true);
+    table->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+//    table->setColumnWidth(0, this->width()/3);
+
+    //model->setHeaderData( 1, Qt::Vertical, QObject::tr("Video Cards") );
+    /*QStringList strList;
     strList << "monitor" << "mouse" << "keyboard" << "hard disk drive"
-            << "graphic card" << "sound card" << "memory" << "motherboard";
-    QList<QStringList>* list;
-    QStringList strList1;
+            << "graphic card" << "sound card" << "memory" << "motherboard";*/
+    QList<QStringList> list;
+    std::vector <std::string> props;
+    QStringList strList;
+    strList << "Video Card" << "Compute Capability";
+    list.append(strList);
+    strList.clear();
+    int deviceCount = getDeviceCount();
+    for(int i=0; i < deviceCount; i++) {
+        props = getPropsOfIDevice(i);
+        strList << props[0].data() << props[1].data();
+        list.append(strList);
+        strList.clear();
+    }
+
+    std::vector<int> minableDevices;
+   // minableDevices.push_back(0);
+   // minableDevices.push_back(1);
+    minableDevices = getMinableDevices();
+    model->setSelectableRows(minableDevices);
+
+
+    /*QStringList strList1;
     strList1 << "monitor" << "2.0";
-    QStringList strList2;
-    strList2 << "keyboard" << "3.0";
-    list->push_back(strList1);
-    list->push_back(strList2);
+    list.append(strList1);
+    //QStringList strList2;
+    strList1.clear();
+    strList1 << "keyboard" << "3.0";
+
+    list.append(strList1);*/
+
+    //printDeviceProps();
+
+
 
     model->loadData(list);
     //model->setStringList(strList);
-    model->getCheckedRows();
+    table->setModel(model);
+
+    //model->getCheckedRows();
+
 
 
 }
@@ -110,76 +162,40 @@ void MiningDialog::createListModelView(){
 void MiningDialog::run_benchmark()
 {
 
-    model->getCheckedRows();
-    //CustomListModel model = (CustomListModel)ui->gpuListView->model();
-    /*const int ARRAY_SIZE = 96;
-    const int ARRAY_BYTES = ARRAY_SIZE * sizeof(float);
+    std::string devices1 = model->getCheckedRows();
+    printf("MY DEV %s\n", devices1.c_str());
 
-    // generate the input array on the host
-    float h_in[ARRAY_SIZE];
-    for (int i = 0; i < ARRAY_SIZE; i++) {
-        h_in[i] = float(i);
-    }
-    float h_out[ARRAY_SIZE];
-
-    // declare GPU memory pointers
-    float * d_in;
-    float * d_out;
-
-    // allocate GPU memory
-    cudaMalloc((void**) &d_in, ARRAY_BYTES);
-    cudaMalloc((void**) &d_out, ARRAY_BYTES);
-
-    // transfer the array to the GPU
-    cudaMemcpy(d_in, h_in, ARRAY_BYTES, cudaMemcpyHostToDevice);
-
-    // launch the kernel
-    /*cube<<<1, ARRAY_SIZE>>>(d_out, d_in);
-
-    // copy back the result array to the CPU
-    cudaMemcpy(h_out, d_out, ARRAY_BYTES, cudaMemcpyDeviceToHost);
-
-    // print out the resulting array
-    for (int i =0; i < ARRAY_SIZE; i++) {
-        printf("%f", h_out[i]);
-        printf(((i % 4) != 3) ? "\t" : "\n");
+    if(!devices1.size()) {
+        QMessageBox::StandardButton resBtn = QMessageBox::warning( this, "No cards selected",
+                                                                   tr("At least one videcard should be selected for mining\n"),
+                                                                   QMessageBox::Ok);
+        return;
     }
 
-    cudaFree(d_in);
-    cudaFree(d_out);
 
-    cudaDeviceReset();*/
-
-
-    /*int nDevices;
-
-    cudaGetDeviceCount(&nDevices);
-    for (int i = 0; i < nDevices; i++) {
-        cudaDeviceProp prop;
-        cudaGetDeviceProperties(&prop, i);
-        printf("Device Number: %d\n", i);
-        printf("  Device name: %s\n", prop.name);
-        printf("  Memory Clock Rate (KHz): %d\n",
-               prop.memoryClockRate);
-        printf("  Memory Bus Width (bits): %d\n",
-               prop.memoryBusWidth);
-        printf("  Peak Memory Bandwidth (GB/s): %f\n\n",
-               2.0 * prop.memoryClockRate * (prop.memoryBusWidth / 8) / 1.0e6);
-    }*/
-
-
-
-    if(minerLogProcess) {
-        minerLogProcess->deleteLater();
-        minerLogProcess = NULL;
+    if(benchmarkLogProcess) {
+        ui->benchmarkButton->setText("Start benchmark");
+        benchmarkLogProcess->deleteLater();
+        benchmarkLogProcess = NULL;
     }
-    printf("I PRESSED\n");
-    minerLogProcess = new QProcess(this);
-    connect(minerLogProcess, SIGNAL(readyReadStandardOutput()),
-            this, SLOT( ReadOut() ));
-    connect(minerLogProcess, SIGNAL(readyReadStandardError()),
-            this, SLOT( ReadErr() ));
-    minerLogProcess->start("ccminer",QStringList() << "--benchmark");
+    else {
+        printf("I PRESSED\n");
+        ui->benchmarkButton->setText("Stop benchmark");
+        ui->benchmarkButton->setEnabled(false);
+        ui->settingsButton->setEnabled(false);
+        ui->startButton->setEnabled(false);
+        ui->helpButton->setEnabled(false);
+        benchmarkLogProcess = new QProcess(this);
+        connect(benchmarkLogProcess, SIGNAL(readyReadStandardOutput()),
+                this, SLOT(ReadOut()));
+        connect(benchmarkLogProcess, SIGNAL(readyReadStandardError()),
+                this, SLOT(ReadErr()));
+        connect(benchmarkLogProcess, SIGNAL(started()),
+                this, SLOT(startedBenchmark()));
+        connect(benchmarkLogProcess, SIGNAL(finished(int , QProcess::ExitStatus )),
+                this, SLOT(finishedBenchmark(int , QProcess::ExitStatus )));
+        benchmarkLogProcess->start("ccminer", QStringList() << "--benchmark" << "-d" << devices1.c_str());
+    }
 
     // For debugging: Wait until the process has finished.
     //minerLogProcess->waitForFinished();
@@ -199,32 +215,111 @@ void MiningDialog::run_benchmark()
     //printf("%s \n", output.data());
 }
 
+QString MiningDialog::receiveWallet() {
+    return "-u " + ui->walletInput->text();
+}
+
+QString MiningDialog::receivePool() {
+    return "-o " + ui->poolComboBox->currentText();
+}
+
+QString MiningDialog::receiveDevices() {
+    std::string devices1 = model->getCheckedRows();
+    return "-d " + QString(devices1.c_str());
+}
+
+QString MiningDialog::receiveAlgoName() {
+    return "-a " + algo;
+}
+
+QString MiningDialog::receivePassword() {
+    return "-p " + password;
+}
+
+QString MiningDialog::receiveNumThreads() {
+    return "-t " + QString::number(numThreads);
+}
+
+bool MiningDialog::createNewScriptFile() {
+    QString filename = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)  + "/start.sh";
+    QFile file(filename);
+
+    if(!file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        return false;
+    }
+    QTextStream out(&file);
+
+    out << "#!/bin/bash\n\n";
+    out << "while :\n";
+    out << "do\n\n";
+
+    out << "ccminer \\\n";
+    out << receiveAlgoName() << " \\\n";
+    out << receiveWallet() << " \\\n";
+    if(password.length()) {
+        out << receivePassword() << " \\\n";
+    }
+    out << receivePool() << " \\\n";
+
+    if(numThreads > 0) {
+        out << receiveNumThreads() << " \\\n";
+    }
+
+    out << receiveDevices() << " \n";
+
+    out << "\n\nsleep 5\n";
+    out << "done\n";
+
+    file.close();
+    file.setPermissions(QFile::ExeGroup | QFile::ExeOther | QFile::ExeOwner | QFile::ExeUser | QFile::ReadGroup | QFile::ReadOther | QFile::ReadOwner | QFile::ReadUser
+    | QFile::WriteGroup | QFile::WriteOther | QFile::WriteOwner | QFile::WriteUser);
+    return  out.status() == QDataStream::Ok;
+
+}
 
 void MiningDialog::run_mining()
 {
-    ui->startButton->setEnabled(false);
-    ui->stopButton->setEnabled(true);
+    //ui->startButton->setEnabled(false);
+    //ui->stopButton->setEnabled(true);
 
     printf("I PRESSED\n");
+
+    if(!(model->getCheckedRows().size())) {
+        QMessageBox::StandardButton resBtn = QMessageBox::warning( this, "No cards selected",
+                                                                   tr("At least one videcard should be selected for mining\n"),
+                                                                   QMessageBox::Ok);
+        return;
+    }
+
+    bool successedFileCreation = createNewScriptFile();
+    if(!successedFileCreation) {
+        QMessageBox::StandardButton resBtn = QMessageBox::warning( this, "Something goes wrong",
+                                                                   tr("Error while creating start script file for ccminer\n"),
+                                                                   QMessageBox::Ok);
+        return;
+    }
     minerLogProcess = new QProcess(this);
     connect(minerLogProcess, SIGNAL(readyReadStandardOutput()),
             this, SLOT(ReadOut()));
     connect(minerLogProcess, SIGNAL(readyReadStandardError()),
             this, SLOT(ReadErr()));
-    minerLogProcess->start("src/qt/start.sh");
+    connect(minerLogProcess, SIGNAL(started()),
+            this, SLOT(startedMining()));
+    connect(minerLogProcess, SIGNAL(finished(int , QProcess::ExitStatus )),
+            this, SLOT(finishedMining(int , QProcess::ExitStatus )));
+    minerLogProcess->start(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)  + "/start.sh");
 
 }
 
 void MiningDialog::stop_mining()
 {
-    ui->stopButton->setEnabled(false);
-    ui->startButton->setEnabled(true);
+    //ui->stopButton->setEnabled(false);
+    //ui->startButton->setEnabled(true);
     printf("I PRESSED\n");
     if(minerLogProcess) {
         minerLogProcess->deleteLater();
         minerLogProcess = NULL;
     }
-
 }
 
 void MiningDialog::ReadOut()
@@ -250,6 +345,35 @@ void MiningDialog::ReadErr()
     printf("LALALALALALALALALA5435435 %s \n", p->readAllStandardError().data());
 }
 
+void MiningDialog::startedBenchmark() {
+    printf("Benchmark started!!!\n");
+    ui->benchmarkButton->setEnabled(true);
+}
+
+void MiningDialog::finishedBenchmark(int exitCode, QProcess::ExitStatus exitStatus) {
+    printf("Benchmark finished!!!\n");
+    ui->startButton->setEnabled(true);
+    ui->settingsButton->setEnabled(true);
+    ui->helpButton->setEnabled(true);
+}
+
+void MiningDialog::startedMining() {
+    printf("Mining started!!!\n");
+    ui->benchmarkButton->setEnabled(false);
+    ui->settingsButton->setEnabled(false);
+    ui->startButton->setEnabled(false);
+    ui->stopButton->setEnabled(true);
+    ui->helpButton->setEnabled(false);
+}
+
+void MiningDialog::finishedMining(int exitCode, QProcess::ExitStatus exitStatus) {
+    printf("Mining finished!!!\n");
+    ui->startButton->setEnabled(true);
+    ui->stopButton->setEnabled(false);
+    ui->settingsButton->setEnabled(true);
+    ui->helpButton->setEnabled(true);
+    ui->benchmarkButton->setEnabled(true);
+}
 
 MiningDialog::~MiningDialog()
 {
@@ -732,10 +856,9 @@ void MiningDialog::setTextTermFormatting(QTextBrowser * textEdit, QString const 
     QRegExp const escapeSequenceExpression(R"(\x1B\[([\d;]+)m)");
     QTextCursor cursor(document);
     cursor.movePosition(QTextCursor::End);
-    /*QTextCharFormat blockFormat = cursor.blockFormat();
-    blockFormat.setBackground(QColor("yellow"));
-    cursor.setCharFormat(blockFormat);*/
-    QTextCharFormat const defaultTextCharFormat = cursor.charFormat();
+    QTextCharFormat defaultTextCharFormat = cursor.charFormat();
+    defaultTextCharFormat.setForeground(Qt::white);
+    cursor.setCharFormat(defaultTextCharFormat);
     cursor.beginEditBlock();
     int offset = escapeSequenceExpression.indexIn(text);
     cursor.insertText(text.mid(0, offset));
