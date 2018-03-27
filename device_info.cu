@@ -26,7 +26,9 @@
  */
 #include "device_info.h"
 #include <stdio.h>
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
+#include <vector>
+#include <string>
 
 void printDeviceProps() {
   int nDevices;

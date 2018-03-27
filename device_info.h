@@ -6,7 +6,9 @@
 #define CMAKE_AND_CUDA_DEVICE_INFO_H
 
 #include <iostream>
-#include<bits/stdc++.h>
+//#include<bits/stdc++.h>
+#include <vector>
+#include <string>
 
 void printDeviceProps();
 int getDeviceCount();

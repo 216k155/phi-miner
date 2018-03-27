@@ -33,6 +33,7 @@ public:
     int abc=11;
     void closeEvent (QCloseEvent *event);
     void setTextTermFormatting(QTextBrowser * textEdit, QString const & text);
+	QString osName();
     void parseEscapeSequence(int attribute, QListIterator< QString > & i, QTextCharFormat & textCharFormat, QTextCharFormat const & defaultTextCharFormat);
     ~MiningDialog();
 public slots:
@@ -60,6 +61,7 @@ private Q_SLOTS:
     void finishedBenchmark(int exitCode, QProcess::ExitStatus exitStatus);
     void startedMining();
     bool createNewScriptFile();
+	bool createNewWindowsScriptFile();
     void exitButtonClicked();
     QString receiveWallet();
     QString receivePool();
